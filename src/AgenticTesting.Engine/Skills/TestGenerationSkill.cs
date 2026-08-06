@@ -47,22 +47,40 @@ REQUIREMENTS:
 4. Add security test cases (authorization, input validation)
 5. Include data governance compliance tests (GDPR, retention)
 
-OUTPUT FORMAT:
-Return a JSON array of test cases with:
-- testId: unique identifier
-- testName: descriptive name
-- testType: Unit|Integration|E2E|API|Security|Compliance
-- description: what the test validates
-- preconditions: setup required
-- steps: array of test steps
-- expectedResults: expected outcomes
-- priority: Critical|High|Medium|Low
-- tags: array of relevant tags
+CRITICAL INSTRUCTIONS:
+1. Return ONLY valid JSON - no markdown, no explanations, no code blocks
+2. The response must start with '[' and end with ']'
+3. Ensure all JSON is properly formatted with double quotes
 
-Generate at least 10 test cases.";
+OUTPUT FORMAT - JSON ARRAY:
+[
+  {{
+    ""testId"": ""TC001"",
+    ""testName"": ""Descriptive test name"",
+    ""testType"": ""Unit|Integration|E2E|API|Security|Compliance"",
+    ""description"": ""What this test validates"",
+    ""preconditions"": ""Setup required"",
+    ""steps"": [""Step 1"", ""Step 2""],
+    ""expectedResults"": ""Expected outcome"",
+    ""priority"": ""Critical|High|Medium|Low"",
+    ""tags"": [""tag1"", ""tag2""]
+  }}
+]
+
+Generate at least 5 test cases. Return ONLY the JSON array, nothing else.";
 
             var result = await _kernel.InvokePromptAsync(prompt);
             var output = result.ToString();
+            
+            // Clean up common LLM formatting issues
+            output = output.Trim();
+            if (output.StartsWith("```json"))
+                output = output.Substring(7);
+            if (output.StartsWith("```"))
+                output = output.Substring(3);
+            if (output.EndsWith("```"))
+                output = output.Substring(0, output.Length - 3);
+            output = output.Trim();
 
             // Parse confidence from the response
             var confidence = CalculateConfidence(output);

@@ -103,6 +103,12 @@ Relevant Context from Knowledge Base:
             pipelineResult.ValidationResult = validationResult.Output;
             pipelineResult.Metadata["validationScore"] = validationResult.ConfidenceScore;
             pipelineResult.Metadata["rejectionRate"] = 0.40; // Target: 40% reduction
+            
+            // Merge validation metadata (includes rawOutputPreview on failure)
+            foreach (var kvp in validationResult.Metadata)
+            {
+                pipelineResult.Metadata[$"validation_{kvp.Key}"] = kvp.Value;
+            }
 
             if (!validationResult.Success)
             {
