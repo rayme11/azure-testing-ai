@@ -1,7 +1,17 @@
 using AgenticTesting.Engine.Skills;
 using Microsoft.SemanticKernel;
 
+// Load .env file if it exists
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+if (File.Exists(envPath))
+{
+    DotNetEnv.Env.Load(envPath);
+}
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Add environment variables to configuration
+builder.Configuration.AddEnvironmentVariables();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -21,11 +31,11 @@ builder.Services.AddSingleton<Kernel>(sp =>
 {
     var kernelBuilder = Kernel.CreateBuilder();
     
-    // Azure OpenAI configuration - update these in appsettings.json or environment variables
-    var endpoint = builder.Configuration["AzureOpenAI:Endpoint"] 
+    // Azure OpenAI configuration - uses .env file or environment variables
+    var endpoint = builder.Configuration["AZURE_OPENAI_ENDPOINT"] 
         ?? "https://aoai-ai-testing-assistant.openai.azure.com/";
-    var apiKey = builder.Configuration["AzureOpenAI:ApiKey"] ?? "your-api-key";
-    var deploymentName = builder.Configuration["AzureOpenAI:DeploymentName"] ?? "gpt-4o";
+    var apiKey = builder.Configuration["AZURE_OPENAI_API_KEY"] ?? "your-api-key";
+    var deploymentName = builder.Configuration["AZURE_OPENAI_DEPLOYMENT_NAME"] ?? "gpt-4o";
 
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: deploymentName,
@@ -53,13 +63,12 @@ builder.Services.AddLogging(logging =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "AI Testing Assistant API v1");
-        options.RoutePrefix = string.Empty; // Serve at root
     });
 }
 

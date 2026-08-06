@@ -1,7 +1,7 @@
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Memory;
 
-namespace LegalDocManager.Engine.Skills;
+namespace AgenticTesting.Engine.Skills;
 
 /// <summary>
 /// Orchestrates multiple AI skills in a pipeline for test generation and validation.

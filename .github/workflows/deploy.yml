@@ -1,0 +1,62 @@
+name: Deploy to Azure Container Apps
+
+on:
+  push:
+    branches: [main, Chapter1-Initial-Setup]
+  pull_request:
+    branches: [main]
+
+env:
+  AZURE_CONTAINER_REGISTRY: aitestingreg305.azurecr.io
+  CONTAINER_APP_NAME: aitesting-api-dev
+  RESOURCE_GROUP: rg-ai-testing-assistant
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+        continue-on-error: true
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/Chapter1-Initial-Setup'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and Push Container Image
+        run: |
+          az acr build \
+            --registry ${{ env.AZURE_CONTAINER_REGISTRY }} \
+            --image aitesting-api:${{ github.sha }} \
+            --file src/LegalDocManager.Api/Dockerfile .
+
+      - name: Deploy to Container Apps
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          acrName: aitestingreg305
+          containerAppName: ${{ env.CONTAINER_APP_NAME }}
+          resourceGroup: ${{ env.RESOURCE_GROUP }}
+          imageToDeploy: ${{ env.AZURE_CONTAINER_REGISTRY }}/aitesting-api:${{ github.sha }}

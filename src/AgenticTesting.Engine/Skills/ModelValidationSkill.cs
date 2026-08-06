@@ -2,7 +2,7 @@ using System.ComponentModel;
 using System.Text.Json;
 using Microsoft.SemanticKernel;
 
-namespace LegalDocManager.Engine.Skills;
+namespace AgenticTesting.Engine.Skills;
 
 /// <summary>
 /// AI Skill for validating LLM outputs and test quality.
@@ -19,6 +19,16 @@ public class ModelValidationSkill : ISkill
     public ModelValidationSkill(Kernel kernel)
     {
         _kernel = kernel;
+    }
+
+    public async Task<ValidationResult> ValidateAsync(string input, SkillContext context)
+    {
+        var canExecute = !string.IsNullOrWhiteSpace(input);
+        return new ValidationResult
+        {
+            CanExecute = canExecute,
+            Confidence = canExecute ? 0.95 : 0.0
+        };
     }
 
     public async Task<SkillResult> ExecuteAsync(string input, SkillContext context)
